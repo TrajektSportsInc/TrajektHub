@@ -46,6 +46,7 @@ class Service extends BaseService {
     super();
   }
 
+  // also used by the update endpoint since it's the same thing
   postMachineConnection = async function (req: Request, res: Response) {
     try {
       const payloadMachine = req.body as Machine;
@@ -54,8 +55,9 @@ class Service extends BaseService {
       );
 
       if (existing) {
-        // update the server of existing machine
+        // update an existing machine
         existing.server = payloadMachine.server;
+        existing.rapsodo_serial = payloadMachine.rapsodo_serial;
         // e.g. if someone was already in the queue before the machine connected
         broadcast(payloadMachine.machineID);
       } else {
@@ -113,6 +115,7 @@ class Service extends BaseService {
         dbMachines.push({
           machineID: payloadUser.machineID,
           server: '',
+          rapsodo_serial: '',
           queue: [payloadUser],
         });
         writeMachines();
