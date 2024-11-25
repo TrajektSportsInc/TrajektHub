@@ -1,42 +1,19 @@
 {
-  "name": "server-ts",
-  "version": "1.0.0",
-  "description": "bare bones template for a back-end server built using Node.js and TypeScript",
-  "main": "server.ts",
-  "scripts": {
-    "clean": "rimraf dist/*",
-    "tsc": "tsc --project ./",
-    "build": "npm run clean && npm run tsc",
-    "start": "npm run clean && npm run tsc && node ./dist/index.js",
-    "start:dev": "ts-node-dev --respawn ./src/index.ts",
-    "start:dist": "node ./dist/index.js",
-    "test": "echo \"ERROR: Testing is the next guy's problem.\" && exit 1"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/carl-wong/node-server-ts.git"
-  },
-  "keywords": [
-    "node",
-    "typescript"
-  ],
   "author": "Carl Wong",
-  "license": "ISC",
   "bugs": {
     "url": "https://github.com/carl-wong/node-server-ts/issues"
   },
-  "homepage": "https://github.com/carl-wong/node-server-ts#readme",
   "dependencies": {
     "body-parser": "^1.19.1",
     "dotenv": "^16.0.0",
     "express": "^4.17.2",
     "helmet": "^5.0.2",
     "http-status-codes": "^2.3.0",
-    "lowdb": "^7.0.1",
     "module-alias": "^2.2.2",
     "morgan": "^1.10.0",
     "rotating-file-stream": "^3.0.2"
   },
+  "description": "bare bones template for a back-end server built using Node.js and TypeScript",
   "devDependencies": {
     "@types/body-parser": "^1.19.2",
     "@types/express": "^4.17.13",
@@ -49,5 +26,27 @@
     "ts-node": "^10.5.0",
     "ts-node-dev": "^1.1.8",
     "typescript": "^4.5.5"
-  }
+  },
+  "homepage": "https://github.com/carl-wong/node-server-ts#readme",
+  "keywords": [
+    "node",
+    "typescript"
+  ],
+  "license": "ISC",
+  "main": "server.ts",
+  "name": "server-ts",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/carl-wong/node-server-ts.git"
+  },
+  "scripts": {
+    "build": "npm run clean && npm run tsc",
+    "clean": "rimraf dist/*",
+    "start": "npm run clean && npm run tsc && node ./dist/index.js",
+    "start:dev": "ts-node-dev --respawn ./src/index.ts",
+    "start:dist": "node ./dist/index.js",
+    "test": "echo \"ERROR: Testing is the next guy's problem.\" && exit 1",
+    "tsc": "tsc --project ./"
+  },
+  "version": "1.0.0"
 }
