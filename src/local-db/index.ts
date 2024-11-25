@@ -20,15 +20,5 @@ export const dbMachines = readMachines();
 
 // only necessary when machines change
 export const writeMachines = () => {
-  const data = dbMachines.map((m) => {
-    const o: Machine = {
-      ...m,
-      // always empty the queue
-      queue: [],
-    };
-
-    return o;
-  });
-
-  writeFileSync(DB_PATH, JSON.stringify(data));
+  writeFileSync(DB_PATH, JSON.stringify(dbMachines, null, 2));
 };
