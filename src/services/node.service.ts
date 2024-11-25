@@ -1,8 +1,20 @@
+import AxiosHelper from '@classes/axios.helper';
 import { Machine, User } from '@root/interfaces/local-db';
 import { BaseService } from '@services/_base.service';
+import { AxiosInstance } from 'axios';
 import { Request, Response } from 'express';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { StatusCodes } from 'http-status-codes';
+
+const servers = process.env.SERVERS?.split(',') ?? [];
+
+const axiosClients: {
+  url: string;
+  client: AxiosInstance;
+}[] = servers.map((url) => ({
+  url: url,
+  client: AxiosHelper.instance(url),
+}));
 
 const dbPath = 'machines.json';
 
@@ -29,6 +41,25 @@ const writeMachines = () => {
   writeFileSync(dbPath, JSON.stringify(data));
 };
 
+// notifies all servers about the current state of the machine and its queue
+const broadcast = (machineID: string) => {
+  const machine = machines.find((m) => m.machineID === machineID);
+
+  if (!machine) {
+    console.warn(
+      'Skipped broadcasting to ${machineID}, not found in machines list'
+    );
+    return;
+  }
+
+  console.log(
+    `Broadcasting ${machineID} status to ${axiosClients.length} servers!`
+  );
+  axiosClients.forEach((m) =>
+    m.client.post('hub/broadcast', machine).catch((e) => console.error(e))
+  );
+};
+
 class Service extends BaseService {
   constructor() {
     super();
@@ -36,19 +67,21 @@ class Service extends BaseService {
 
   postMachineConnection = async function (req: Request, res: Response) {
     try {
-      const machine = req.body as Machine;
-      const existing = machines.find((m) => m.machineID === machine.machineID);
+      const payloadMachine = req.body as Machine;
+      const existing = machines.find(
+        (m) => m.machineID === payloadMachine.machineID
+      );
 
-      // update the server of existing machine
       if (existing) {
-        existing.server = machine.server;
-        writeMachines();
-        res.status(StatusCodes.OK).send();
-        return;
+        // update the server of existing machine
+        existing.server = payloadMachine.server;
+        // e.g. if someone was already in the queue before the machine connected
+        broadcast(payloadMachine.machineID);
+      } else {
+        // add a new machine
+        machines.push(payloadMachine);
       }
 
-      // add a new machine
-      machines.push(machine);
       writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
@@ -62,23 +95,28 @@ class Service extends BaseService {
    */
   postUserConnection = async function (req: Request, res: Response) {
     try {
-      const user = req.body as User;
-      const machine = machines.find((m) => m.machineID === user.machineID);
+      const payloadUser = req.body as User;
+      const existing = machines.find(
+        (m) => m.machineID === payloadUser.machineID
+      );
 
-      // add user to existing queue
-      if (machine) {
-        machine.queue.push(user);
-        res.status(StatusCodes.OK).send();
-        return;
+      if (existing) {
+        // add user to existing queue
+        existing.queue.push(payloadUser);
+
+        // e.g. the user is the first/only user in queue
+        broadcast(payloadUser.machineID);
+      } else {
+        // add a placeholder machine (e.g. for when the machine reconnects)
+        machines.push({
+          machineID: payloadUser.machineID,
+          server: '',
+          queue: [payloadUser],
+        });
+        writeMachines();
+        // no need to broadcast because the machine isn't connected anywhere (yet)
       }
 
-      // add a placeholder machine (e.g. for when the machine reconnects)
-      machines.push({
-        machineID: user.machineID,
-        server: '',
-        queue: [user],
-      });
-      writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -94,7 +132,14 @@ class Service extends BaseService {
       const user = req.body as User;
 
       machines.forEach((m) => {
-        m.queue = m.queue.filter((u) => u.session !== user.session);
+        const index = m.queue.findIndex((u) => u.session === user.session);
+        if (index === -1) {
+          return;
+        }
+
+        // remove the user from the queue
+        m.queue.splice(index, 1);
+        broadcast(m.machineID);
       });
 
       res.status(StatusCodes.OK).send();
