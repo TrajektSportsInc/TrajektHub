@@ -9,27 +9,46 @@ import { StatusCodes } from 'http-status-codes';
 const servers = process.env.SERVERS?.split(',') ?? [];
 
 const axiosClients: {
-  url: string;
+  server: string;
   client: AxiosInstance;
-}[] = servers.map((url) => ({
-  url: url,
-  client: AxiosHelper.instance(url),
+}[] = servers.map((m) => ({
+  server: m,
+  client: AxiosHelper.instance(m),
 }));
 
-// notifies all servers about the current state of the machine and its queue
+// notifies all servers about the current state of the machine and its queue (first entry is the active user)
 const broadcast = (machineID: string) => {
   const machine = dbMachines.find((m) => m.machineID === machineID);
 
   if (!machine) {
     console.warn(
-      'Skipped broadcasting to ${machineID}, not found in machines list'
+      `Skipped broadcasting to ${machineID}, not found in machines list`
     );
     return;
   }
 
-  console.log(
-    `Broadcasting ${machineID} status to ${axiosClients.length} servers!`
+  const targetServer = axiosClients.find((c) => c.server === machine.server);
+
+  if (targetServer) {
+    console.log(
+      `Narrowly broadcasting ${machineID} status to ${machine.server}`
+    );
+
+    targetServer.client.post('hub/broadcast', machine).catch((e) => {
+      if (e.status === StatusCodes.NOT_FOUND) {
+        return;
+      }
+
+      console.error(e);
+    });
+    return;
+  }
+
+  // hub doesn't know where the machine is, just try them all
+  console.warn(
+    `Widely broadcasting ${machineID} status to all ${axiosClients.length} servers`
   );
+
   axiosClients.forEach((m) =>
     m.client.post('hub/broadcast', machine).catch((e) => {
       if (e.status === StatusCodes.NOT_FOUND) {
@@ -107,9 +126,6 @@ class Service extends BaseService {
       if (existing) {
         // add user to existing queue
         existing.queue.push(payloadUser);
-
-        // e.g. the user is the first/only user in queue
-        broadcast(payloadUser.machineID);
       } else {
         // add a placeholder machine (e.g. for when the machine reconnects)
         dbMachines.push({
@@ -118,10 +134,11 @@ class Service extends BaseService {
           rapsodo_serial: '',
           queue: [payloadUser],
         });
-        writeMachines();
-        // no need to broadcast because the machine isn't connected anywhere (yet)
       }
 
+      // e.g. the user is the first/only user in queue
+      broadcast(payloadUser.machineID);
+      writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -147,6 +164,7 @@ class Service extends BaseService {
         broadcast(m.machineID);
       });
 
+      writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
