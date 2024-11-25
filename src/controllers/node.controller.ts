@@ -25,6 +25,12 @@ class Controller extends BaseController {
       Middlewares.auth,
       Service.postMachineConnection
     );
+
+    this.router.post(
+      '/machines/disconnection',
+      Middlewares.auth,
+      Service.postMachineDisconnection
+    );
   }
 }
 

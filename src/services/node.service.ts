@@ -1,9 +1,9 @@
 import AxiosHelper from '@classes/axios.helper';
 import { Machine, User } from '@root/interfaces/local-db';
+import { dbMachines, writeMachines } from '@root/local-db';
 import { BaseService } from '@services/_base.service';
 import { AxiosInstance } from 'axios';
 import { Request, Response } from 'express';
-import { existsSync, readFileSync, writeFileSync } from 'fs';
 import { StatusCodes } from 'http-status-codes';
 
 const servers = process.env.SERVERS?.split(',') ?? [];
@@ -16,34 +16,9 @@ const axiosClients: {
   client: AxiosHelper.instance(url),
 }));
 
-const dbPath = 'machines.json';
-
-// setup machines.json file
-const machines: Machine[] = existsSync(dbPath)
-  ? JSON.parse(readFileSync(dbPath, 'utf-8'))
-  : [];
-
-// reset the queue to nothing on startup
-machines.forEach((m) => (m.queue = []));
-
-// only necessary when machines change
-const writeMachines = () => {
-  const data = machines.map((m) => {
-    const o: Machine = {
-      ...m,
-      // always empty the queue
-      queue: [],
-    };
-
-    return o;
-  });
-
-  writeFileSync(dbPath, JSON.stringify(data));
-};
-
 // notifies all servers about the current state of the machine and its queue
 const broadcast = (machineID: string) => {
-  const machine = machines.find((m) => m.machineID === machineID);
+  const machine = dbMachines.find((m) => m.machineID === machineID);
 
   if (!machine) {
     console.warn(
@@ -56,7 +31,13 @@ const broadcast = (machineID: string) => {
     `Broadcasting ${machineID} status to ${axiosClients.length} servers!`
   );
   axiosClients.forEach((m) =>
-    m.client.post('hub/broadcast', machine).catch((e) => console.error(e))
+    m.client.post('hub/broadcast', machine).catch((e) => {
+      if (e.status === StatusCodes.NOT_FOUND) {
+        return;
+      }
+
+      console.error(e);
+    })
   );
 };
 
@@ -68,7 +49,7 @@ class Service extends BaseService {
   postMachineConnection = async function (req: Request, res: Response) {
     try {
       const payloadMachine = req.body as Machine;
-      const existing = machines.find(
+      const existing = dbMachines.find(
         (m) => m.machineID === payloadMachine.machineID
       );
 
@@ -79,10 +60,31 @@ class Service extends BaseService {
         broadcast(payloadMachine.machineID);
       } else {
         // add a new machine
-        machines.push(payloadMachine);
+        dbMachines.push(payloadMachine);
       }
 
       writeMachines();
+      res.status(StatusCodes.OK).send();
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
+
+  postMachineDisconnection = async function (req: Request, res: Response) {
+    try {
+      const payloadMachine = req.body as Machine;
+
+      const existing = dbMachines.find(
+        (m) => m.machineID === payloadMachine.machineID
+      );
+
+      if (existing) {
+        // mark the server as d/c until it reconnects so tracking requests don't need to be forwarded
+        existing.server = '';
+        writeMachines();
+      }
+
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -96,7 +98,7 @@ class Service extends BaseService {
   postUserConnection = async function (req: Request, res: Response) {
     try {
       const payloadUser = req.body as User;
-      const existing = machines.find(
+      const existing = dbMachines.find(
         (m) => m.machineID === payloadUser.machineID
       );
 
@@ -108,7 +110,7 @@ class Service extends BaseService {
         broadcast(payloadUser.machineID);
       } else {
         // add a placeholder machine (e.g. for when the machine reconnects)
-        machines.push({
+        dbMachines.push({
           machineID: payloadUser.machineID,
           server: '',
           queue: [payloadUser],
@@ -131,7 +133,7 @@ class Service extends BaseService {
     try {
       const user = req.body as User;
 
-      machines.forEach((m) => {
+      dbMachines.forEach((m) => {
         const index = m.queue.findIndex((u) => u.session === user.session);
         if (index === -1) {
           return;
