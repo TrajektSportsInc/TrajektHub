@@ -1,5 +1,7 @@
-import main from './main.controller';
+import node from "./node.controller";
+import sample from "./sample.controller";
 
 export default {
-  MainController: main,
-}
+  Sample: sample,
+  Node: node,
+};

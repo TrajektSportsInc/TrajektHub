@@ -1,13 +1,13 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
+import { StatusCodes } from "http-status-codes";
 
 export abstract class BaseService {
-  constructor() {
-  }
+  constructor() {}
 
-  static ping = async function(req: Request, res: Response) {
-    res.status(200).send({
+  static ping = async function (req: Request, res: Response) {
+    res.status(StatusCodes.OK).send({
       message: `I'm alive!`,
       serverTime: new Date(),
     });
-  }
+  };
 }
