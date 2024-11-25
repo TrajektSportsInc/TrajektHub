@@ -59,7 +59,7 @@ class Service extends BaseService {
 
   postTrackmanBall = async function (req: Request, res: Response) {
     try {
-      const machineID = req.params.machineID;
+      const { machineID } = req.params;
 
       const machine = dbMachines.find((m) => m.machineID === machineID);
 
@@ -88,7 +88,7 @@ class Service extends BaseService {
 
   postTrackmanSession = async function (req: Request, res: Response) {
     try {
-      const machineID = req.params.machineID;
+      const { machineID } = req.params;
 
       const machine = dbMachines.find((m) => m.machineID === machineID);
 
