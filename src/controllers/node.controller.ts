@@ -1,6 +1,6 @@
-import { Middlewares } from "@classes";
-import { BaseController } from "@controllers/_base.controller";
-import Service from "@services/node.service";
+import { Middlewares } from '@classes';
+import { BaseController } from '@controllers/_base.controller';
+import Service from '@services/node.service';
 
 class Controller extends BaseController {
   constructor() {
@@ -9,13 +9,19 @@ class Controller extends BaseController {
 
   declareRoutes(): void {
     this.router.post(
-      "/users/connection",
+      '/users/connection',
       Middlewares.auth,
       Service.postUserConnection
     );
 
     this.router.post(
-      "/machines/connection",
+      '/users/disconnection',
+      Middlewares.auth,
+      Service.postUserDisconnection
+    );
+
+    this.router.post(
+      '/machines/connection',
       Middlewares.auth,
       Service.postMachineConnection
     );
