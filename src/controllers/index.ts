@@ -1,7 +1,9 @@
-import node from "./node.controller";
-import sample from "./sample.controller";
+import node from './node.controller';
+import sample from './sample.controller';
+import tracking from './tracking.controller';
 
 export default {
-  Sample: sample,
   Node: node,
+  Sample: sample,
+  Tracking: tracking,
 };

@@ -1,17 +1,17 @@
-import { HttpException, Middlewares } from "@classes";
-import ctrl from "@controllers";
-import bodyParser from "body-parser";
-import express, { Application, NextFunction, Request, Response } from "express";
-import helmet from "helmet";
-import * as http from "http";
-import morgan from "morgan";
-import * as rfs from "rotating-file-stream";
+import { HttpException, Middlewares } from '@classes';
+import ctrl from '@controllers';
+import bodyParser from 'body-parser';
+import express, { Application, NextFunction, Request, Response } from 'express';
+import helmet from 'helmet';
+import * as http from 'http';
+import morgan from 'morgan';
+import * as rfs from 'rotating-file-stream';
 
 const PORT = process.env.PORT || 3001;
 
 const CONTROLLERS: { route: string; controller: any }[] = [
-  { route: "/sample", controller: ctrl.Sample },
-  { route: "/node", controller: ctrl.Node },
+  { route: '/node', controller: ctrl.Node },
+  { route: '/tracking', controller: ctrl.Tracking },
 ];
 
 class MainServer {
@@ -40,28 +40,28 @@ class MainServer {
     );
 
     /** log errors */
-    const errorLog = rfs.createStream("error.log", {
-      interval: "1d", //daily rotation
-      path: "logs",
+    const errorLog = rfs.createStream('error.log', {
+      interval: '1d', //daily rotation
+      path: 'logs',
       compress: true,
     });
 
     this.app.use(
-      morgan("combined", {
+      morgan('combined', {
         skip: (req: Request, res: Response) => res.statusCode < 400,
         stream: errorLog,
       })
     );
 
     /** log access */
-    const accessLog = rfs.createStream("access.log", {
-      interval: "1d", //daily rotation
-      path: "logs",
+    const accessLog = rfs.createStream('access.log', {
+      interval: '1d', //daily rotation
+      path: 'logs',
       compress: true,
     });
 
     this.app.use(
-      morgan("common", {
+      morgan('common', {
         stream: accessLog,
       })
     );
@@ -96,18 +96,18 @@ class MainServer {
       console.log(`Hub running here 👉 https://localhost:${PORT}`);
     });
 
-    process.on("SIGTERM", () => {
-      console.debug("SIGTERM signal received: closing Hub");
+    process.on('SIGTERM', () => {
+      console.debug('SIGTERM signal received: closing Hub');
       this.server?.close(() => {
-        console.debug("Hub closed");
+        console.debug('Hub closed');
       });
     });
   }
 
   stop() {
-    console.debug("Manual stop instruction received: closing Hub");
+    console.debug('Manual stop instruction received: closing Hub');
     this.server?.close(() => {
-      console.debug("Hub closed");
+      console.debug('Hub closed');
     });
   }
 }
