@@ -22,8 +22,13 @@ const broadcast = (machineID: string) => {
 
   if (!machine) {
     console.warn(
-      `Skipped broadcasting to ${machineID}, not found in machines list`
+      `Skipped broadcasting re: ${machineID}, not found in machines list`
     );
+    return;
+  }
+
+  if (machine.queue.length === 0) {
+    console.warn(`Skipped broadcasting re: ${machineID}, queue is empty`);
     return;
   }
 
@@ -45,7 +50,7 @@ const broadcast = (machineID: string) => {
   }
 
   // hub doesn't know where the machine is, just try them all
-  console.warn(
+  console.log(
     `Widely broadcasting ${machineID} status to all ${axiosClients.length} servers`
   );
 
@@ -77,13 +82,13 @@ class Service extends BaseService {
         // update an existing machine
         existing.server = payloadMachine.server;
         existing.rapsodo_serial = payloadMachine.rapsodo_serial;
-        // e.g. if someone was already in the queue before the machine connected
-        broadcast(payloadMachine.machineID);
       } else {
         // add a new machine
         dbMachines.push(payloadMachine);
       }
 
+      // e.g. if someone was already in the queue before the machine connected
+      broadcast(payloadMachine.machineID);
       writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
