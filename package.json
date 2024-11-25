@@ -7,6 +7,7 @@
     "clean": "rimraf dist/*",
     "tsc": "tsc --project ./",
     "build": "npm run clean && npm run tsc",
+    "start": "npm run clean && npm run tsc && node ./dist/index.js",
     "start:dev": "ts-node-dev --respawn ./src/index.ts",
     "start:dist": "node ./dist/index.js",
     "test": "echo \"ERROR: Testing is the next guy's problem.\" && exit 1"
