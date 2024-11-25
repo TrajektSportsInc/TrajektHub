@@ -1,6 +1,6 @@
-import { Middlewares } from "@classes";
-import { BaseController } from "@controllers/_base.controller";
-import Service from "@services/sample.service";
+import { Middlewares } from '@classes';
+import { BaseController } from '@controllers/_base.controller';
+import Service from '@root/services/sample.service';
 
 class Controller extends BaseController {
   constructor() {
@@ -8,11 +8,11 @@ class Controller extends BaseController {
   }
 
   declareRoutes(): void {
-    this.router.get("/sample", Middlewares.auth, Service.sampleGET);
-    this.router.post("/sample", Middlewares.auth, Service.samplePOST);
-    this.router.put("/sample", Middlewares.auth, Service.samplePUT);
-    this.router.patch("/sample", Middlewares.auth, Service.samplePATCH);
-    this.router.delete("/sample", Middlewares.auth, Service.sampleDELETE);
+    this.router.get('/sample', Middlewares.auth, Service.sampleGET);
+    this.router.post('/sample', Middlewares.auth, Service.samplePOST);
+    this.router.put('/sample', Middlewares.auth, Service.samplePUT);
+    this.router.patch('/sample', Middlewares.auth, Service.samplePATCH);
+    this.router.delete('/sample', Middlewares.auth, Service.sampleDELETE);
   }
 }
 
