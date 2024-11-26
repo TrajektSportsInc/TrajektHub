@@ -247,6 +247,32 @@ class Service extends BaseService {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
+
+  // forward the active user's response to the server that the requester is connected to
+  postControlResponse = async function (req: Request, res: Response) {
+    try {
+      // accept | reject
+      const { action } = req.params;
+      const requester = req.body as HubUser;
+
+      const server = SERVER_CLIENTS.find((m) => m.server === requester.server);
+
+      if (!server) {
+        throw new Error(
+          `Failed to find server with URL "${requester.server}" for control response`
+        );
+      }
+
+      server.client
+        .post(`hub/control/response/${action}`, requester)
+        .catch(ignoreNotFound);
+
+      res.status(StatusCodes.OK).send();
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
 }
 
 export default new Service();

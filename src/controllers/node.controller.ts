@@ -50,6 +50,11 @@ class Controller extends BaseController {
       Service.postControlRequest
     );
 
+    this.router.post(
+      '/control/response/:action',
+      Middlewares.auth,
+      Service.postControlResponse
+    );
   }
 }
 
