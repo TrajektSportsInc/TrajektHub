@@ -1,6 +1,7 @@
 import { HttpException, Middlewares } from '@classes';
 import ctrl from '@controllers';
 import { HubMachine } from '@interfaces/local-db';
+import { ignoreNotFound } from '@root/classes/axios.helper';
 import { dbMachines } from '@root/local-db';
 import { SERVER_CLIENTS } from '@root/server/connections';
 import bodyParser from 'body-parser';
@@ -23,7 +24,12 @@ const initMachines = async () => {
     try {
       const sMachines = await client
         .get('hub/scan')
-        .then((result) => result.data as HubMachine[]);
+        .then((result) => result.data as HubMachine[])
+        .catch(ignoreNotFound);
+
+      if (!sMachines) {
+        continue;
+      }
 
       sMachines.forEach((sMachine) => {
         const existingMachine = dbMachines.find(

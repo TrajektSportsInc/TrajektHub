@@ -1,3 +1,4 @@
+import { ignoreNotFound } from '@root/classes/axios.helper';
 import { HubMachine, HubUser } from '@root/interfaces/local-db';
 import { dbMachines } from '@root/local-db';
 import { SERVER_CLIENTS, SERVERS } from '@root/server/connections';
@@ -28,13 +29,7 @@ const broadcast = (machineID: string) => {
       `Narrowly broadcasting ${machineID} status to ${machine.server}`
     );
 
-    targetServer.client.post('hub/broadcast', machine).catch((e) => {
-      if (e.status === StatusCodes.NOT_FOUND) {
-        return;
-      }
-
-      console.error(e);
-    });
+    targetServer.client.post('hub/broadcast', machine).catch(ignoreNotFound);
     return;
   }
 
@@ -43,15 +38,9 @@ const broadcast = (machineID: string) => {
     `Widely broadcasting ${machineID} status to all ${SERVER_CLIENTS.length} servers`
   );
 
-  for (const { client } of SERVER_CLIENTS) {
-    client.post('hub/broadcast', machine).catch((e) => {
-      if (e.status === StatusCodes.NOT_FOUND) {
-        return;
-      }
-
-      console.error(e);
-    });
-  }
+  SERVER_CLIENTS.forEach((s) =>
+    s.client.post('hub/broadcast', machine).catch(ignoreNotFound)
+  );
 };
 
 class Service extends BaseService {
