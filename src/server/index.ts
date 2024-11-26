@@ -1,5 +1,8 @@
 import { HttpException, Middlewares } from '@classes';
 import ctrl from '@controllers';
+import { HubMachine } from '@interfaces/local-db';
+import { dbMachines } from '@root/local-db';
+import { SERVER_CLIENTS } from '@root/server/connections';
 import bodyParser from 'body-parser';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';
@@ -13,6 +16,37 @@ const CONTROLLERS: { route: string; controller: any }[] = [
   { route: '/node', controller: ctrl.Node },
   { route: '/tracking', controller: ctrl.Tracking },
 ];
+
+// rebuilds machines and queues by scanning servers
+const initMachines = async () => {
+  for (const { client } of SERVER_CLIENTS) {
+    try {
+      const sMachines = await client
+        .get('hub/scan')
+        .then((result) => result.data as HubMachine[]);
+
+      sMachines.forEach((sMachine) => {
+        const existingMachine = dbMachines.find(
+          (m) => m.machineID === sMachine.machineID
+        );
+
+        if (!existingMachine) {
+          dbMachines.push(sMachine);
+          return;
+        }
+
+        existingMachine.queue.push(...sMachine.queue);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  // FIFO treatment for queue
+  dbMachines.forEach((m) =>
+    m.queue.sort((a, b) => (a.created < b.created ? -1 : 1))
+  );
+};
 
 class MainServer {
   private app: Application;
@@ -95,6 +129,9 @@ class MainServer {
     this.server = this.app.listen(PORT, (): void => {
       console.log(`Hub running here 👉 https://localhost:${PORT}`);
     });
+
+    // scan each server to construct machines and queues accordingly
+    initMachines();
 
     process.on('SIGTERM', () => {
       console.debug('SIGTERM signal received: closing Hub');
