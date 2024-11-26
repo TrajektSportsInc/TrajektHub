@@ -10,6 +10,7 @@ export interface HubMachine {
 }
 
 export interface HubUser {
+  created: number;
   email: string;
   machineID: string;
   server: string;
