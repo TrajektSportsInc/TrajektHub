@@ -16,7 +16,10 @@ const readMachines = (): HubMachine[] => {
   return data;
 };
 
-export const dbMachines = readMachines();
+// export const dbMachines = readMachines();
+
+// start from scratch since scan on startup should reliably rebuild this
+export const dbMachines: HubMachine[] = [];
 
 // only necessary when machines change
 export const writeMachines = () => {
