@@ -50,7 +50,7 @@ const initMachines = async () => {
 
   // FIFO treatment for queue
   dbMachines.forEach((m) =>
-    m.queue.sort((a, b) => (a.created < b.created ? -1 : 1))
+    m.queue.sort((a, b) => (a.queueDate < b.queueDate ? -1 : 1))
   );
 
   console.log('dbMachines initialized:', dbMachines);

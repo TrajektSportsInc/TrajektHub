@@ -279,7 +279,7 @@ class Service extends BaseService {
             machine.queue.sort((a, b) =>
               a.session === requester.session
                 ? -1
-                : a.created < b.created
+                : a.queueDate < b.queueDate
                   ? -1
                   : 1
             );
@@ -315,7 +315,11 @@ class Service extends BaseService {
 
       // move the requester to the front of the queue
       machine.queue.sort((a, b) =>
-        a.session === requester.session ? -1 : a.created < b.created ? -1 : 1
+        a.session === requester.session
+          ? -1
+          : a.queueDate < b.queueDate
+            ? -1
+            : 1
       );
 
       broadcast(machine.machineID);
