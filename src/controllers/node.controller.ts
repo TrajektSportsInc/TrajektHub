@@ -9,6 +9,12 @@ class Controller extends BaseController {
 
   declareRoutes(): void {
     this.router.post(
+      '/server/connection',
+      Middlewares.auth,
+      Service.postServerConnection
+    );
+
+    this.router.post(
       '/users/connection',
       Middlewares.auth,
       Service.postUserConnection

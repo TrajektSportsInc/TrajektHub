@@ -70,6 +70,39 @@ class Service extends BaseService {
     super();
   }
 
+  // server just (re)connected => flush previously queued users for this server
+  postServerConnection = async function (req: Request, res: Response) {
+    try {
+      const payloadServer = req.body as { server: string };
+
+      if (!servers.includes(payloadServer.server)) {
+        // provided server URL is not listed in the env configuration
+        res.status(StatusCodes.SERVICE_UNAVAILABLE).send();
+        return;
+      }
+
+      dbMachines.forEach((machine) => {
+        const nextQueue = machine.queue.filter(
+          (user) => user.server !== payloadServer.server
+        );
+
+        if (machine.queue.length === nextQueue.length) {
+          // no change
+          return;
+        }
+
+        machine.queue = nextQueue;
+        broadcast(machine.machineID);
+      });
+
+      writeMachines();
+      res.status(StatusCodes.OK).send();
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
+
   // also used by the update endpoint since it's the same thing
   postMachineConnection = async function (req: Request, res: Response) {
     try {
