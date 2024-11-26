@@ -1,5 +1,5 @@
 import AxiosHelper from '@classes/axios.helper';
-import { Machine, User } from '@root/interfaces/local-db';
+import { HubMachine, HubUser } from '@root/interfaces/local-db';
 import { dbMachines, writeMachines } from '@root/local-db';
 import { BaseService } from '@services/_base.service';
 import { AxiosInstance } from 'axios';
@@ -106,7 +106,7 @@ class Service extends BaseService {
   // also used by the update endpoint since it's the same thing
   postMachineConnection = async function (req: Request, res: Response) {
     try {
-      const payloadMachine = req.body as Machine;
+      const payloadMachine = req.body as HubMachine;
       const existing = dbMachines.find(
         (m) => m.machineID === payloadMachine.machineID
       );
@@ -132,7 +132,7 @@ class Service extends BaseService {
 
   postMachineDisconnection = async function (req: Request, res: Response) {
     try {
-      const payloadMachine = req.body as Machine;
+      const payloadMachine = req.body as HubMachine;
 
       const existing = dbMachines.find(
         (m) => m.machineID === payloadMachine.machineID
@@ -156,7 +156,7 @@ class Service extends BaseService {
    */
   postUserConnection = async function (req: Request, res: Response) {
     try {
-      const payloadUser = req.body as User;
+      const payloadUser = req.body as HubUser;
       const existing = dbMachines.find(
         (m) => m.machineID === payloadUser.machineID
       );
@@ -189,7 +189,7 @@ class Service extends BaseService {
    */
   postUserDisconnection = async function (req: Request, res: Response) {
     try {
-      const user = req.body as User;
+      const user = req.body as HubUser;
 
       dbMachines.forEach((m) => {
         const index = m.queue.findIndex((u) => u.session === user.session);

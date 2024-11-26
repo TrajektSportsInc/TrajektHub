@@ -1,4 +1,4 @@
-export interface Machine {
+export interface HubMachine {
   machineID: string;
   server: string;
 
@@ -6,10 +6,10 @@ export interface Machine {
   rapsodo_serial: string | undefined;
 
   // will reset whenever server starts up
-  queue: User[];
+  queue: HubUser[];
 }
 
-export interface User {
+export interface HubUser {
   email: string;
   machineID: string;
   server: string;
