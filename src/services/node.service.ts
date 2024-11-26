@@ -74,6 +74,7 @@ class Service extends BaseService {
       });
 
       // writeMachines();
+      console.log('server connected', dbMachines);
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -101,6 +102,7 @@ class Service extends BaseService {
       // e.g. if someone was already in the queue before the machine connected
       broadcast(payloadMachine.machineID);
       // writeMachines();
+      console.log('machine connected', dbMachines);
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -155,6 +157,7 @@ class Service extends BaseService {
       // e.g. the user is the first/only user in queue
       broadcast(payloadUser.machineID);
       // writeMachines();
+      console.log('user connected', dbMachines);
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
