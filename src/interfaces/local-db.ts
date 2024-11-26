@@ -1,6 +1,6 @@
 export interface HubMachine {
   machineID: string;
-  server: string;
+  server: string | undefined;
 
   // for rerouting rapsodo POST requests
   rapsodo_serial: string | undefined;
