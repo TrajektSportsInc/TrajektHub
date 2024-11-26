@@ -1,7 +1,7 @@
 import { HttpException, Middlewares } from '@classes';
 import ctrl from '@controllers';
-import { HubMachine } from '@interfaces/local-db';
 import { ignoreNotFound } from '@root/classes/axios.helper';
+import { HubMachine } from '@root/interfaces/hub';
 import { dbMachines } from '@root/local-db';
 import { SERVER_CLIENTS } from '@root/server/connections';
 import bodyParser from 'body-parser';

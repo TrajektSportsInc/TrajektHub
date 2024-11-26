@@ -1,5 +1,5 @@
 import { ignoreNotFound } from '@root/classes/axios.helper';
-import { HubMachine, HubUser } from '@root/interfaces/local-db';
+import { HubMachine, HubUser } from '@root/interfaces/hub';
 import { dbMachines } from '@root/local-db';
 import { SERVER_CLIENTS, SERVERS } from '@root/server/connections';
 import { BaseService } from '@services/_base.service';

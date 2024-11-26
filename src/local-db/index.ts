@@ -1,4 +1,4 @@
-import { HubMachine } from '@interfaces/local-db';
+import { HubMachine } from '@root/interfaces/hub';
 import { existsSync, readFileSync, writeFileSync } from 'fs';
 
 const DB_PATH = 'machines.json';
