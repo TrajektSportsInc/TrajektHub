@@ -193,32 +193,32 @@ class Service extends BaseService {
    */
   postControlRequest = async function (req: Request, res: Response) {
     try {
-      const user = req.body as HubUser;
+      const requester = req.body as HubUser;
 
       const machine = dbMachines.find(
         (m) =>
-          m.machineID === user.machineID &&
-          m.queue.map((u) => u.session).includes(user.session)
+          m.machineID === requester.machineID &&
+          m.queue.map((u) => u.session).includes(requester.session)
       );
 
       if (!machine) {
         throw new Error(
-          `Failed to find machine with machineID "${user.machineID}" with queue containing "${user.session}" for control request`
+          `Failed to find machine with machineID "${requester.machineID}" with queue containing "${requester.session}" for control request`
         );
       }
 
       if (!machine.server) {
         throw new Error(
-          `"${user.machineID}" is not connected to any server for control request`
+          `"${requester.machineID}" is not connected to any server for control request`
         );
       }
 
       const firstQueue = machine.queue[0];
 
-      if (firstQueue?.session === user.session) {
+      if (firstQueue?.session === requester.session) {
         // user is the first one in queue but somehow not active, which shouldn't trigger
         // broadcasting should cause the server to activate the user, fixing the situaton
-        broadcast(user.machineID);
+        broadcast(requester.machineID);
         res.status(StatusCodes.OK).send();
         return;
       }
@@ -232,7 +232,7 @@ class Service extends BaseService {
       }
 
       server.client
-        .post('hub/control/request', user)
+        .post('hub/control/request', requester)
         .then(() => {
           // OK => requesting server will wait
           res.status(StatusCodes.OK).send();
@@ -265,8 +265,60 @@ class Service extends BaseService {
 
       server.client
         .post(`hub/control/response/${action}`, requester)
+        .then(() => {
+          if (action === 'accept') {
+            const machine = dbMachines.find(
+              (m) => m.machineID === requester.machineID
+            );
+
+            if (!machine) {
+              return;
+            }
+
+            // move the requester to the front of the queue
+            machine.queue.sort((a, b) =>
+              a.session === requester.session
+                ? -1
+                : a.created < b.created
+                  ? -1
+                  : 1
+            );
+
+            broadcast(machine.machineID);
+          }
+        })
         .catch(ignoreNotFound);
 
+      res.status(StatusCodes.OK).send();
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
+
+  // active user failed to respond to the requester, requester will forcefully take control
+  postControlForce = async function (req: Request, res: Response) {
+    try {
+      const requester = req.body as HubUser;
+
+      const machine = dbMachines.find(
+        (m) =>
+          m.machineID === requester.machineID &&
+          m.queue.map((u) => u.session).includes(requester.session)
+      );
+
+      if (!machine) {
+        throw new Error(
+          `Failed to find machine with machineID "${requester.machineID}" with queue containing "${requester.session}" for control force`
+        );
+      }
+
+      // move the requester to the front of the queue
+      machine.queue.sort((a, b) =>
+        a.session === requester.session ? -1 : a.created < b.created ? -1 : 1
+      );
+
+      broadcast(machine.machineID);
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
