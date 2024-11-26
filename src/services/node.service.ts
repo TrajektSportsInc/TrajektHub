@@ -187,6 +187,66 @@ class Service extends BaseService {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
+
+  /**
+   * user asks for control => notify currently active user
+   */
+  postControlRequest = async function (req: Request, res: Response) {
+    try {
+      const user = req.body as HubUser;
+
+      const machine = dbMachines.find(
+        (m) =>
+          m.machineID === user.machineID &&
+          m.queue.map((u) => u.session).includes(user.session)
+      );
+
+      if (!machine) {
+        throw new Error(
+          `Failed to find machine with machineID "${user.machineID}" with queue containing "${user.session}" for control request`
+        );
+      }
+
+      if (!machine.server) {
+        throw new Error(
+          `"${user.machineID}" is not connected to any server for control request`
+        );
+      }
+
+      const firstQueue = machine.queue[0];
+
+      if (firstQueue?.session === user.session) {
+        // user is the first one in queue but somehow not active, which shouldn't trigger
+        // broadcasting should cause the server to activate the user, fixing the situaton
+        broadcast(user.machineID);
+        res.status(StatusCodes.OK).send();
+        return;
+      }
+
+      const server = SERVER_CLIENTS.find((m) => m.server === machine.server);
+
+      if (!server) {
+        throw new Error(
+          `Failed to find server with URL "${machine.server}" for control request`
+        );
+      }
+
+      server.client
+        .post('hub/control/request', user)
+        .then(() => {
+          // OK => requesting server will wait
+          res.status(StatusCodes.OK).send();
+        })
+        .catch((error) => {
+          console.error(error);
+          // NOT_FOUND => requesting server will attempt to handle things itself
+          res.status(StatusCodes.NOT_FOUND).send();
+        });
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
 }
 
 export default new Service();
