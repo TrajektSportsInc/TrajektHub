@@ -1,20 +1,9 @@
-import AxiosHelper from '@classes/axios.helper';
 import { HubMachine, HubUser } from '@root/interfaces/local-db';
-import { dbMachines, writeMachines } from '@root/local-db';
+import { dbMachines } from '@root/local-db';
+import { SERVER_CLIENTS, SERVERS } from '@root/server/connections';
 import { BaseService } from '@services/_base.service';
-import { AxiosInstance } from 'axios';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
-
-const servers = process.env.SERVERS?.split(',') ?? [];
-
-const axiosClients: {
-  server: string;
-  client: AxiosInstance;
-}[] = servers.map((m) => ({
-  server: m,
-  client: AxiosHelper.instance(m),
-}));
 
 // notifies all servers about the current state of the machine and its queue (first entry is the active user)
 const broadcast = (machineID: string) => {
@@ -32,7 +21,7 @@ const broadcast = (machineID: string) => {
     return;
   }
 
-  const targetServer = axiosClients.find((c) => c.server === machine.server);
+  const targetServer = SERVER_CLIENTS.find((c) => c.server === machine.server);
 
   if (targetServer) {
     console.log(
@@ -51,18 +40,18 @@ const broadcast = (machineID: string) => {
 
   // hub doesn't know where the machine is, just try them all
   console.log(
-    `Widely broadcasting ${machineID} status to all ${axiosClients.length} servers`
+    `Widely broadcasting ${machineID} status to all ${SERVER_CLIENTS.length} servers`
   );
 
-  axiosClients.forEach((m) =>
-    m.client.post('hub/broadcast', machine).catch((e) => {
+  for (const { client } of SERVER_CLIENTS) {
+    client.post('hub/broadcast', machine).catch((e) => {
       if (e.status === StatusCodes.NOT_FOUND) {
         return;
       }
 
       console.error(e);
-    })
-  );
+    });
+  }
 };
 
 class Service extends BaseService {
@@ -75,7 +64,7 @@ class Service extends BaseService {
     try {
       const payloadServer = req.body as { server: string };
 
-      if (!servers.includes(payloadServer.server)) {
+      if (!SERVERS.includes(payloadServer.server)) {
         // provided server URL is not listed in the env configuration
         res.status(StatusCodes.SERVICE_UNAVAILABLE).send();
         return;
@@ -95,7 +84,7 @@ class Service extends BaseService {
         broadcast(machine.machineID);
       });
 
-      writeMachines();
+      // writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -122,7 +111,7 @@ class Service extends BaseService {
 
       // e.g. if someone was already in the queue before the machine connected
       broadcast(payloadMachine.machineID);
-      writeMachines();
+      // writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -140,8 +129,8 @@ class Service extends BaseService {
 
       if (existing) {
         // mark the server as d/c until it reconnects so tracking requests don't need to be forwarded
-        existing.server = '';
-        writeMachines();
+        existing.server = undefined;
+        // writeMachines();
       }
 
       res.status(StatusCodes.OK).send();
@@ -168,15 +157,15 @@ class Service extends BaseService {
         // add a placeholder machine (e.g. for when the machine reconnects)
         dbMachines.push({
           machineID: payloadUser.machineID,
-          server: '',
-          rapsodo_serial: '',
+          server: undefined,
+          rapsodo_serial: undefined,
           queue: [payloadUser],
         });
       }
 
       // e.g. the user is the first/only user in queue
       broadcast(payloadUser.machineID);
-      writeMachines();
+      // writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -202,7 +191,7 @@ class Service extends BaseService {
         broadcast(m.machineID);
       });
 
-      writeMachines();
+      // writeMachines();
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
