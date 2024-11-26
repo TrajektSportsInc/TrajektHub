@@ -13,10 +13,11 @@ AxiosLogger.setGlobalConfig({
 
 export const ignoreNotFound = (e: any) => {
   if (e.status === StatusCodes.NOT_FOUND) {
-    return;
+    return undefined;
   }
 
   console.error(e);
+  return undefined;
 };
 
 class AxiosHelper {
