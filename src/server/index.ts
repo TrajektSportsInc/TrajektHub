@@ -46,6 +46,8 @@ const initMachines = async () => {
   dbMachines.forEach((m) =>
     m.queue.sort((a, b) => (a.created < b.created ? -1 : 1))
   );
+
+  console.log('dbMachines initialized:', dbMachines);
 };
 
 class MainServer {
