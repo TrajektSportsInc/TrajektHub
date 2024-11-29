@@ -2,6 +2,8 @@ import axios, { AxiosInstance } from 'axios';
 import * as AxiosLogger from 'axios-logger';
 import { StatusCodes } from 'http-status-codes';
 
+const HUB_API_KEY = process.env.HUB_API_KEY;
+
 AxiosLogger.setGlobalConfig({
   dateFormat: 'HH:MM:ss.l',
   url: true,
@@ -29,6 +31,9 @@ class AxiosHelper {
 
     return axios.create({
       baseURL,
+      headers: {
+        'x-hub-key': HUB_API_KEY ?? '----NO KEY----',
+      },
     });
   }
 }
