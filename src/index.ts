@@ -1,5 +1,5 @@
 /** env variables */
-import * as DOTENV from "dotenv";
+import * as DOTENV from 'dotenv';
 const dotenv = DOTENV.config();
 if (!!dotenv.error) {
   throw dotenv.error;
@@ -8,15 +8,16 @@ if (!!dotenv.error) {
 }
 
 /** path resolution */
-import moduleAlias from "module-alias";
+import moduleAlias from 'module-alias';
 moduleAlias.addAliases({
-  "@root": __dirname,
-  "@classes": __dirname + "/classes",
-  "@controllers": __dirname + "/controllers",
-  "@enums": __dirname + "/enums",
-  "@interfaces": __dirname + "/interfaces",
-  "@services": __dirname + "/services",
+  '@root': __dirname,
+  '@classes': __dirname + '/classes',
+  '@controllers': __dirname + '/controllers',
+  '@enums': __dirname + '/enums',
+  '@interfaces': __dirname + '/interfaces',
+  '@server': __dirname + '/server',
+  '@services': __dirname + '/services',
 });
 
-import MainServer from "@root/server";
+import MainServer from '@server';
 MainServer.start();

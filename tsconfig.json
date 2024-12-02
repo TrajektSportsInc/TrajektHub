@@ -43,6 +43,8 @@
       "@enums/*": ["./enums/*"],
       "@interfaces": ["./interfaces"],
       "@interfaces/*": ["./interfaces/*"],
+      "@server": ["./server"],
+      "@server/*": ["./server/*"],
       "@services": ["./services"],
       "@services/*": ["./services/*"]
     },

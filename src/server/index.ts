@@ -1,9 +1,9 @@
 import { HttpException, Middlewares } from '@classes';
+import { ignoreNotFound } from '@classes/axios.helper';
 import ctrl from '@controllers';
-import { ignoreNotFound } from '@root/classes/axios.helper';
-import { HubMachine } from '@root/interfaces/hub';
+import { HubMachine } from '@interfaces/hub';
 import { dbMachines } from '@root/local-db';
-import { SERVER_CLIENTS } from '@root/server/connections';
+import { SERVER_CLIENTS } from '@server/connections';
 import bodyParser from 'body-parser';
 import express, { Application, NextFunction, Request, Response } from 'express';
 import helmet from 'helmet';

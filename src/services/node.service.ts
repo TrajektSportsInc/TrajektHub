@@ -1,7 +1,7 @@
-import { ignoreNotFound } from '@root/classes/axios.helper';
-import { HubMachine, HubUser } from '@root/interfaces/hub';
+import { ignoreNotFound } from '@classes/axios.helper';
+import { HubMachine, HubUser } from '@interfaces/hub';
 import { dbMachines } from '@root/local-db';
-import { SERVER_CLIENTS, SERVERS } from '@root/server/connections';
+import { SERVER_CLIENTS, SERVERS } from '@server/connections';
 import { BaseService } from '@services/_base.service';
 import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';

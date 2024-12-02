@@ -1,6 +1,6 @@
 import { Middlewares } from '@classes';
 import { BaseController } from '@controllers/_base.controller';
-import Service from '@root/services/tracking.service';
+import Service from '@services/tracking.service';
 
 class Controller extends BaseController {
   constructor() {
