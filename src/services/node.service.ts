@@ -51,9 +51,9 @@ class Service extends BaseService {
   // server just (re)connected => flush previously queued users for this server
   postServerConnection = async function (req: Request, res: Response) {
     try {
-      const payloadServer = req.body as { server: string };
+      const payload = req.body as { server: string };
 
-      if (!SERVERS.includes(payloadServer.server)) {
+      if (!SERVERS.includes(payload.server)) {
         // provided server URL is not listed in the env configuration
         res.status(StatusCodes.SERVICE_UNAVAILABLE).send();
         return;
@@ -61,7 +61,7 @@ class Service extends BaseService {
 
       dbMachines.forEach((machine) => {
         const nextQueue = machine.queue.filter(
-          (user) => user.server !== payloadServer.server
+          (user) => user.server !== payload.server
         );
 
         if (machine.queue.length === nextQueue.length) {
@@ -74,7 +74,10 @@ class Service extends BaseService {
       });
 
       // writeMachines();
-      console.log('server connected', dbMachines);
+      console.log({
+        event: 'server connected',
+        payload,
+      });
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -85,24 +88,28 @@ class Service extends BaseService {
   // also used by the update endpoint since it's the same thing
   postMachineConnection = async function (req: Request, res: Response) {
     try {
-      const payloadMachine = req.body as HubMachine;
+      const payload = req.body as HubMachine;
       const existing = dbMachines.find(
-        (m) => m.machineID === payloadMachine.machineID
+        (m) => m.machineID === payload.machineID
       );
 
       if (existing) {
         // update an existing machine
-        existing.server = payloadMachine.server;
-        existing.rapsodo_serial = payloadMachine.rapsodo_serial;
+        existing.server = payload.server;
+        existing.rapsodo_serial = payload.rapsodo_serial;
       } else {
         // add a new machine
-        dbMachines.push(payloadMachine);
+        dbMachines.push(payload);
       }
 
       // e.g. if someone was already in the queue before the machine connected
-      broadcast(payloadMachine.machineID);
+      broadcast(payload.machineID);
       // writeMachines();
-      console.log('machine connected', dbMachines);
+      console.log({
+        event: 'machine connected',
+        payload,
+        existing,
+      });
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -112,10 +119,10 @@ class Service extends BaseService {
 
   postMachineDisconnection = async function (req: Request, res: Response) {
     try {
-      const payloadMachine = req.body as HubMachine;
+      const payload = req.body as HubMachine;
 
       const existing = dbMachines.find(
-        (m) => m.machineID === payloadMachine.machineID
+        (m) => m.machineID === payload.machineID
       );
 
       if (existing) {
@@ -136,28 +143,32 @@ class Service extends BaseService {
    */
   postUserConnection = async function (req: Request, res: Response) {
     try {
-      const payloadUser = req.body as HubUser;
+      const payload = req.body as HubUser;
       const existing = dbMachines.find(
-        (m) => m.machineID === payloadUser.machineID
+        (m) => m.machineID === payload.machineID
       );
 
       if (existing) {
         // add user to existing queue
-        existing.queue.push(payloadUser);
+        existing.queue.push(payload);
       } else {
         // add a placeholder machine (e.g. for when the machine reconnects)
         dbMachines.push({
-          machineID: payloadUser.machineID,
+          machineID: payload.machineID,
           server: undefined,
           rapsodo_serial: undefined,
-          queue: [payloadUser],
+          queue: [payload],
         });
       }
 
       // e.g. the user is the first/only user in queue
-      broadcast(payloadUser.machineID);
+      broadcast(payload.machineID);
       // writeMachines();
-      console.log('user connected', dbMachines);
+      console.log({
+        event: 'user connected',
+        payload,
+        existing,
+      });
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
