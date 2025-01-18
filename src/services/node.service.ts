@@ -332,6 +332,36 @@ class Service extends BaseService {
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
+
+  postQueueChange = async function (req: Request, res: Response) {
+    try {
+      const payload = req.body as HubMachine;
+      const existing = dbMachines.find(
+        (m) => m.machineID === payload.machineID
+      );
+
+      if (existing) {
+        // update an existing machine
+        existing.queue = payload.queue;
+      } else {
+        // add a new machine
+        dbMachines.push(payload);
+      }
+
+      // e.g. if someone was already in the queue before the machine connected
+      broadcast(payload.machineID);
+      // writeMachines();
+      console.log({
+        event: 'queue changed',
+        payload,
+        existing,
+      });
+      res.status(StatusCodes.OK).send();
+    } catch (e) {
+      console.error(e);
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
+    }
+  };
 }
 
 export default new Service();

@@ -61,6 +61,12 @@ class Controller extends BaseController {
       Middlewares.auth,
       Service.postControlForce
     );
+
+    this.router.post(
+      '/queue/change',
+      Middlewares.auth,
+      Service.postQueueChange
+    );
   }
 }
 
