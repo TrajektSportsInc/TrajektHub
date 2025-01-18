@@ -105,11 +105,13 @@ class Service extends BaseService {
       // e.g. if someone was already in the queue before the machine connected
       broadcast(payload.machineID);
       // writeMachines();
-      console.log({
-        event: 'machine connected',
-        payload,
-        existing,
-      });
+      console.log(
+        'machine connected',
+        dbMachines.map((m) => ({
+          ...m,
+          queue: m.queue.map((q) => `${q.server} - ${q.session} - ${q.email}`),
+        }))
+      );
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
@@ -164,11 +166,13 @@ class Service extends BaseService {
       // e.g. the user is the first/only user in queue
       broadcast(payload.machineID);
       // writeMachines();
-      console.log({
-        event: 'user connected',
-        payload,
-        existing,
-      });
+      console.log(
+        'user connected',
+        dbMachines.map((m) => ({
+          ...m,
+          queue: m.queue.map((q) => `${q.server} - ${q.session} - ${q.email}`),
+        }))
+      );
       res.status(StatusCodes.OK).send();
     } catch (e) {
       console.error(e);
