@@ -94,7 +94,7 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post('trackman/ball', req.body);
+        ?.client.post('trackman/hub-ball', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
@@ -153,7 +153,7 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post('trackman/session', req.body);
+        ?.client.post('trackman/hub-session', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
