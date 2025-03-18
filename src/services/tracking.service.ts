@@ -1,4 +1,6 @@
+import { ArrayHelper } from '@classes/array.helper';
 import AxiosHelper from '@classes/axios.helper';
+import { ISession } from '@interfaces/trackman';
 import { dbMachines } from '@root/local-db';
 import { BaseService } from '@services/_base.service';
 import { AxiosInstance } from 'axios';
@@ -6,6 +8,8 @@ import { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 
 const servers = process.env.SERVERS?.split(',') ?? [];
+
+const TM_SUBJECT = 'PlayByPlayFeed';
 
 const axiosClients: {
   url: string;
@@ -87,14 +91,41 @@ class Service extends BaseService {
   };
 
   postTrackmanSession = async function (req: Request, res: Response) {
-    try {
-      const { machineID } = req.params;
+    const payload = req.body as ISession[];
 
-      const machine = dbMachines.find((m) => m.machineID === machineID);
+    try {
+      const session = payload.find((b) => b.subject === TM_SUBJECT);
+
+      if (!session) {
+        throw new Error(
+          `Failed to find any Trackman session with subject "${TM_SUBJECT}", found: ${ArrayHelper.unique(
+            payload.map((b) => b.subject)
+          ).join(', ')}`
+        );
+      }
+
+      const pitcherNames = session.data.Pitchers.map((p) => p.NameRef);
+
+      const firstMachineID = pitcherNames
+        .map((n) => {
+          // * node server should also ignore idTail for TM requests relayed from the hub
+          // * because the IDs if the same machine are not guaranteed to match between DBs (e.g. dev vs prod DB)
+          const [idTail, machineID] = n.split(', ');
+          return machineID;
+        })
+        .find((m) => m);
+
+      if (!firstMachineID) {
+        throw new Error(
+          `Failed to find machineID from pitcher names for Trackman POST session request (${pitcherNames.join(', ')})`
+        );
+      }
+
+      const machine = dbMachines.find((m) => m.machineID === firstMachineID);
 
       if (!machine) {
         throw new Error(
-          `Failed to find machine with machineID "${machineID}" for Trackman POST session request`
+          `Failed to find machine with machineID "${firstMachineID}" for Trackman POST session request`
         );
       }
 
@@ -106,7 +137,7 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post(`trackman/session/${machineID}`, req.body);
+        ?.client.post('trackman/session', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
