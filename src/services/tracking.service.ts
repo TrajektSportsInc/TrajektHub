@@ -1,6 +1,7 @@
 import { ArrayHelper } from '@classes/array.helper';
 import AxiosHelper from '@classes/axios.helper';
-import { ISession } from '@interfaces/trackman';
+import { ITrackmanBall } from '@interfaces/trackman/ball';
+import { ITrackmanSession } from '@interfaces/trackman/session';
 import { dbMachines } from '@root/local-db';
 import { BaseService } from '@services/_base.service';
 import { AxiosInstance } from 'axios';
@@ -62,14 +63,26 @@ class Service extends BaseService {
   };
 
   postTrackmanBall = async function (req: Request, res: Response) {
-    try {
-      const { machineID } = req.params;
+    const payload = req.body as ITrackmanBall[];
 
-      const machine = dbMachines.find((m) => m.machineID === machineID);
+    try {
+      const ball = payload.find((b) => b.subject === TM_SUBJECT);
+
+      if (!ball) {
+        throw new Error(
+          `Failed to find any ball with subject "${TM_SUBJECT}", found: ${ArrayHelper.unique(
+            payload.map((b) => b.subject)
+          ).join(', ')}`
+        );
+      }
+
+      const machine = dbMachines.find(
+        (m) => m.trackman_session === ball.data.SessionId
+      );
 
       if (!machine) {
         throw new Error(
-          `Failed to find machine with machineID "${machineID}" for Trackman POST ball request`
+          `Failed to find machine with trackman_session "${ball.data.SessionId}" for Trackman POST ball request`
         );
       }
 
@@ -81,17 +94,17 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post(`trackman/ball/${machineID}`, req.body);
+        ?.client.post('trackman/ball', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
-      console.error(e);
+      console.error(e, payload);
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
 
   postTrackmanSession = async function (req: Request, res: Response) {
-    const payload = req.body as ISession[];
+    const payload = req.body as ITrackmanSession[];
 
     try {
       const session = payload.find((b) => b.subject === TM_SUBJECT);
@@ -135,13 +148,16 @@ class Service extends BaseService {
         );
       }
 
+      // for identifying this machine when subsequent ball requests arrive
+      machine.trackman_session = session.data.SessionId;
+
       axiosClients
         .find((c) => c.url === machine.server)
         ?.client.post('trackman/session', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
-      console.error(e);
+      console.error(e, payload);
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
