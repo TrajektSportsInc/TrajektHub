@@ -159,6 +159,7 @@ class Service extends BaseService {
           machineID: payload.machineID,
           server: undefined,
           rapsodo_serial: undefined,
+          trackman_session: undefined,
           queue: [payload],
         });
       }
