@@ -163,9 +163,9 @@ class Service extends BaseService {
   };
 
   postMSBS = async function (req: Request, res: Response) {
-    try {
-      const payload = req.body as { machineID: string };
+    const payload = req.body as { machineID: string };
 
+    try {
       const machine = dbMachines.find((m) => m.machineID === payload.machineID);
 
       if (!machine) {
@@ -186,7 +186,7 @@ class Service extends BaseService {
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
-      console.error(e);
+      console.error(e, payload);
       res.status(StatusCodes.INTERNAL_SERVER_ERROR).send();
     }
   };
