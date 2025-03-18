@@ -5,6 +5,9 @@ export interface HubMachine {
   // for rerouting rapsodo POST requests
   rapsodo_serial: string | undefined;
 
+  // for rerouting trackman POST requests
+  trackman_session: string | undefined;
+
   // will reset whenever server starts up
   queue: HubUser[];
 }

@@ -11,16 +11,14 @@ class Controller extends BaseController {
     // rapsodo won't come with machineID; the serial number will need to be used instead
     this.router.post('/rapsodo', Middlewares.anon, Service.postRapsodo);
 
-    // configured per unit to include the machineID
     this.router.post(
-      '/trackman/session/:machineID',
+      '/trackman/session',
       Middlewares.anon,
       Service.postTrackmanSession
     );
 
-    // configured per unit to include the machineID
     this.router.post(
-      '/trackman/ball/:machineID',
+      '/trackman/ball',
       Middlewares.anon,
       Service.postTrackmanBall
     );
