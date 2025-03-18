@@ -1,4 +1,4 @@
-export interface ISessionData {
+export interface ITrackmanSessionData {
   Version: string;
   Time: string;
   SessionId: string;
@@ -9,10 +9,10 @@ export interface ISessionData {
   SessionState: SessionState;
 }
 
-export interface ISession {
+export interface ITrackmanSession {
   id: string;
   subject: string;
-  data: ISessionData;
+  data: ITrackmanSessionData;
   eventType: string;
   dataVersion: string;
   metadataVersion: string;
