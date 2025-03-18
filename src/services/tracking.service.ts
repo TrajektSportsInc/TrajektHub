@@ -53,7 +53,7 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post('state/rapsodo', req.body);
+        ?.client.post('state/hub-rapsodo', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
@@ -182,7 +182,7 @@ class Service extends BaseService {
 
       axiosClients
         .find((c) => c.url === machine.server)
-        ?.client.post('state/msbs', req.body);
+        ?.client.post('state/hub-msbs', req.body);
 
       res.status(StatusCodes.OK).send();
     } catch (e) {
